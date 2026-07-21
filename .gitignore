@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Environment / secrets
+.env
+.env.local
+
+# Data — never commit raw or processed datasets (can be large / re-derivable)
+data/raw/*
+data/interim/*
+data/processed/*
+!data/**/.gitkeep
+
+# Trained model artifacts
+models/*
+!models/.gitkeep
+
+# Experiment tracking
+mlruns/
+wandb/
+
+# Notebooks — strip checkpoints
+.ipynb_checkpoints/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+
+# Testing / tooling caches
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
