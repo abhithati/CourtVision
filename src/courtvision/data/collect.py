@@ -1,6 +1,6 @@
 from nba_api.stats.endpoints import leaguegamelog
 import pandas as pd
-
+from courtvision.config import RAW_DIR
 
 
 
@@ -40,10 +40,21 @@ def fetch_season(season):
         "PTS_away": "away_pts",
     })
 
+    
+
     return games
 
 
-
+def collect(seasons):
+    for season in seasons:
+        path = RAW_DIR / f"games_{season}.csv"
+        if path.exists():
+            print(f"skip {season}.csv")
+            continue
+        games = fetch_season(season)
+        games.to_csv(path, index=False)
+        print(f"saved {season}: {len(games)} games")
+        time.sleep(.6)
 
 
 if __name__ == "__main__":
