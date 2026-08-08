@@ -1,15 +1,15 @@
+import time
+
 from nba_api.stats.endpoints import leaguegamelog
 import pandas as pd
 from courtvision.config import RAW_DIR
 
 
-
-
 def fetch_season(season):
     log = leaguegamelog.LeagueGameLog(
-    season=season,
-    season_type_all_star="Regular Season",
-)
+        season=season,
+        season_type_all_star="Regular Season",
+    )
     df = log.get_data_frames()[0]
 
     # The teams that play at home have "vs" while the teams that are away have "@"
@@ -57,7 +57,15 @@ def collect(seasons):
         time.sleep(.6)
 
 
+def recent_seasons(num_seasons, end_year=2025):
+    """Return the most recent `num_seasons` as ['2016-17', ..., '2025-26'].
+
+    end_year is the starting year of the latest completed season
+    (season "2025-26" started in 2025).
+    """
+    start_year = end_year - num_seasons + 1
+    return [f"{y}-{(y + 1) % 100:02d}" for y in range(start_year, end_year + 1)]
+
+
 if __name__ == "__main__":
-    games = fetch_season("2023-24")
-    print(games.shape)               
-    print(games["home_win"].mean())  
+    collect(recent_seasons(10))
