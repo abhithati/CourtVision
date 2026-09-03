@@ -19,6 +19,15 @@ def load_games():
     return pd.concat([pd.read_csv(f) for f in files], ignore_index=True)
 
 
+def season_start_year(dates):
+    """Starting year of the NBA season a date falls in (2016 for "2016-17").
+
+    Seasons run Oct-June, so months Sep-Dec belong to that calendar year's
+    season and Jan-Jun belong to the previous year's.
+    """
+    return dates.dt.year.where(dates.dt.month >= 9, dates.dt.year - 1)
+
+
 def to_team_games(games):
     """One row per game → two rows per game (each team's perspective)."""
     home = pd.DataFrame({
@@ -43,11 +52,18 @@ def to_team_games(games):
     })
     team_games = pd.concat([home, away], ignore_index=True)
     team_games["game_date"] = pd.to_datetime(team_games["game_date"])
-    return team_games.sort_values(["team", "game_date"]).reset_index(drop=True)
+    team_games["season"] = season_start_year(team_games["game_date"])
+    return team_games.sort_values(["team", "season", "game_date"]).reset_index(drop=True)
+
 
 def add_rolling_features(team_games):
-    """Add rolling form features (prior games only)."""
-    grp = team_games.groupby("team")
+    """Add rolling form features using prior games in the same season only.
+
+    Grouping by season (not just team) resets each window every October:
+    form doesn't carry across an offseason of trades and draft picks, and it
+    keeps rest_days from reporting the ~190-day gap between seasons.
+    """
+    grp = team_games.groupby(["team", "season"])
 
     # prev 5 and 10 game win percentage
     team_games["win_pct_5"] = grp["won"].transform(lambda s: s.shift(1).rolling(5).mean())
@@ -60,15 +76,17 @@ def add_rolling_features(team_games):
     # Point differential — usually the strongest single form signal
     team_games["net_rating_5"] = team_games["pts_5"] - team_games["pts_allowed_5"]
 
-    # Days since this team's previous game (NaN for their first game)
-    team_games["rest_days"] = grp["game_date"].diff().dt.days
+    # Days since this team's previous game (NaN for their first game of a season).
+    # Clipped at 7: beyond a week the exact number stops mattering, and it keeps
+    # the 2020 COVID-bubble restart (~144-day mid-season gap) from skewing the scale.
+    team_games["rest_days"] = grp["game_date"].diff().dt.days.clip(upper=7)
 
     return team_games
 
 
 def to_game_level(team_games):
     """Collapse team rows back to one row per game: home features vs away features."""
-    home_cols = ["game_id", "game_date", "team", "won"] + FEATURE_COLS
+    home_cols = ["game_id", "game_date", "season", "team", "won"] + FEATURE_COLS
     away_cols = ["game_id", "team"] + FEATURE_COLS
 
     home = team_games.loc[team_games["is_home"] == 1, home_cols]
@@ -80,11 +98,6 @@ def to_game_level(team_games):
         "team_away": "away_team",
         "won": "home_win",
     })
-
-    # Season starting year (e.g. 2016 for "2016-17") — needed for season-based splits.
-    games["season"] = games["game_date"].dt.year.where(
-        games["game_date"].dt.month >= 9, games["game_date"].dt.year - 1
-    )
 
     return games.sort_values("game_date").reset_index(drop=True)
 
