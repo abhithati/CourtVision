@@ -65,15 +65,18 @@ def train(df=None, train_end=2022, val_season=2023, save=True):
 
     home_win_rate = train_df[TARGET].mean()
 
-    print(f"train: {len(train_df):>6} games  (seasons {train_df['season'].min()}-{train_df['season'].max()})")
-    print(f"val:   {len(val_df):>6} games  (season {val_season})")
-    print(f"test:  {len(test_df):>6} games  (seasons {test_df['season'].min()}-{test_df['season'].max()})")
+    for label, split in (("train", train_df), ("val", val_df), ("test", test_df)):
+        seasons = f"{split['season'].min()}-{split['season'].max()}"
+        print(f"{label:<6} {len(split):>6} games  (seasons {seasons})")
     print(f"\ntrain home-win rate (baseline): {home_win_rate:.4f}")
 
     for name, split in (("VALIDATION", val_df), ("TEST", test_df)):
         probs = model.predict_proba(split[FEATURE_NAMES])[:, 1]
         print(f"\n=== {name} (season(s) {sorted(split['season'].unique())}) ===")
-        print(format_comparison(evaluate(split[TARGET], probs), baseline_scores(split[TARGET], home_win_rate)))
+        print(format_comparison(
+            evaluate(split[TARGET], probs),
+            baseline_scores(split[TARGET], home_win_rate),
+        ))
 
     # Calibration on the test set: does "70%" actually mean 70%?
     test_probs = model.predict_proba(test_df[FEATURE_NAMES])[:, 1]

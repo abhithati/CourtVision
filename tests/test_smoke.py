@@ -3,8 +3,7 @@
 Confirms the scaffold is wired correctly before any real logic lands.
 """
 
-from courtvision import __version__
-from courtvision import config
+from courtvision import __version__, config
 
 
 def test_version():

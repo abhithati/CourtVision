@@ -71,7 +71,9 @@ def add_rolling_features(team_games):
 
     # Scoring ability over the previous 5 games
     team_games["pts_5"] = grp["pts"].transform(lambda s: s.shift(1).rolling(5).mean())
-    team_games["pts_allowed_5"] = grp["pts_allowed"].transform(lambda s: s.shift(1).rolling(5).mean())
+    team_games["pts_allowed_5"] = grp["pts_allowed"].transform(
+        lambda s: s.shift(1).rolling(5).mean()
+    )
 
     # Point differential — usually the strongest single form signal
     team_games["net_rating_5"] = team_games["pts_5"] - team_games["pts_allowed_5"]

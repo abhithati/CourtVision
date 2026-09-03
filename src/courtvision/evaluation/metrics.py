@@ -50,11 +50,16 @@ def calibration_table(y_true, y_prob, n_bins=10):
     y_prob = np.asarray(y_prob)
     edges = np.linspace(0, 1, n_bins + 1)
     rows = []
-    for lo, hi in zip(edges[:-1], edges[1:]):
+    for lo, hi in zip(edges[:-1], edges[1:], strict=True):
         mask = (y_prob >= lo) & (y_prob < hi if hi < 1 else y_prob <= hi)
         if not mask.any():
             continue
-        rows.append((f"{lo:.1f}-{hi:.1f}", int(mask.sum()), y_prob[mask].mean(), y_true[mask].mean()))
+        rows.append((
+            f"{lo:.1f}-{hi:.1f}",
+            int(mask.sum()),
+            y_prob[mask].mean(),
+            y_true[mask].mean(),
+        ))
     return rows
 
 

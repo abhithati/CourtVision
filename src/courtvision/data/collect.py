@@ -1,7 +1,7 @@
 import time
 
 from nba_api.stats.endpoints import leaguegamelog
-import pandas as pd
+
 from courtvision.config import RAW_DIR
 
 
